@@ -2,10 +2,13 @@
 #include "kinect-handler.h"
 
 KinectHandler::KinectHandler():
-    m_iXScreenDPI( 1920 ),
-    m_iYScreenDPI( 1200 ),
     m_bIsOnRightSide( false ),
-    m_bIsOnLeftSide( false )
+    m_bIsOnLeftSide( false ),
+    m_pSensor( NULL ),
+    m_tRightTimestamp( 0, 0 ),
+    m_tLeftTimestamp( 0, 0 ),
+    m_tSplitedHandsTimestamp( 0, 0 ),
+    m_bIsSlidingOn( false )
 {
     createFirstConnectedKinectSensor();
 }
@@ -109,7 +112,8 @@ void KinectHandler::skeletonHandler()
                              << " "
                              << "W: " << skeletonFrame.SkeletonData[ i ].SkeletonPositions[ NUI_SKELETON_POSITION_HAND_RIGHT ].w*/;
 
-                    cursorMoveHandling( skeletonFrame.SkeletonData[ i ].SkeletonPositions[ NUI_SKELETON_POSITION_HAND_RIGHT ] );
+                    bothHandMoveHandling( skeletonFrame.SkeletonData[ i ].SkeletonPositions[ NUI_SKELETON_POSITION_HAND_LEFT ],
+                                          skeletonFrame.SkeletonData[ i ].SkeletonPositions[ NUI_SKELETON_POSITION_HAND_RIGHT ] );
                 }
             }
         }
@@ -118,73 +122,109 @@ void KinectHandler::skeletonHandler()
     }
 }
 
-Vector4 & KinectHandler::mapToScreen( Vector4 & skeletonData )
+void KinectHandler::rightHandMoveHandling( const Vector4 & skeletonData )
 {
-    skeletonData.x = ( ( skeletonData.x + 1 ) / 2 ) * 1920;
-    skeletonData.y = 1200 - ( ( skeletonData.y + 1 ) / 2 ) * 1200;
+    if( m_bIsSlidingOn == true )
+    {
+        if( skeletonData.x > 0.15 )
+        {
+            if( m_bIsOnLeftSide == true )
+            {
+                if( m_tRightTimestamp.msecsTo( QTime::currentTime() ) < 200 )
+                {
+                    qDebug() << "Swipe right: " << m_tRightTimestamp.msecsTo( QTime::currentTime() );
+                    rightArrowPressed();
+                }
+            }
 
-    return skeletonData;
+            m_bIsOnRightSide = true;
+            m_bIsOnLeftSide = false;
+
+            m_tLeftTimestamp = QTime::currentTime();
+        }
+        else if( skeletonData.x < -0.15 )
+        {
+            if( m_bIsOnRightSide == true )
+            {
+                if( m_tLeftTimestamp.msecsTo( QTime::currentTime() ) < 200 )
+                {
+                    qDebug() << "Swipe left: " << m_tLeftTimestamp.msecsTo( QTime::currentTime() );
+                    leftArrowPressed();
+                }
+            }
+
+            m_bIsOnRightSide = false;
+            m_bIsOnLeftSide = true;
+
+            m_tRightTimestamp = QTime::currentTime();
+        }
+    }
 }
 
-void KinectHandler::cursorMoveHandling( const Vector4 & skeletonData )
+void KinectHandler::leftHandMoveHandling( const Vector4 & skeletonData )
 {
-    if( skeletonData.x > 0.15 )
-    {
-        if( m_bIsOnLeftSide == true )
-        {
-            qDebug() << "Swipe right";
-        }
-
-        m_bIsOnRightSide = true;
-        m_bIsOnLeftSide = false;
-    }
-    else if( skeletonData.x < -0.15 )
-    {
-        if( m_bIsOnRightSide == true )
-        {
-            qDebug() << "Swipe left";
-        }
-
-        m_bIsOnRightSide = false;
-        m_bIsOnLeftSide = true;
-
-        mouseLeftClick();
-    }
+    Q_UNUSED( skeletonData )
 }
 
-void KinectHandler::mouseLeftClick()
+void KinectHandler::bothHandMoveHandling( const Vector4 & leftHandData, const Vector4 & rightHandData )
 {
-//    INPUT press;
-//    ZeroMemory( & press, sizeof( INPUT ) ); // screen goes black if it does not exist
+    if( abs( leftHandData.x - rightHandData.x ) < 0.20 )
+    {
+        if( abs( leftHandData.y - rightHandData.y ) < 0.50 )
+        {
+            if( m_tSplitedHandsTimestamp.msecsTo( QTime::currentTime() ) > 5000 )
+            {
+                changeSlidingState();
+                m_tSplitedHandsTimestamp = QTime::currentTime();
+            }
+        }
+    }
+    else
+    {
+        m_tSplitedHandsTimestamp = QTime::currentTime();
+    }
 
-//    INPUT release;
-//    ZeroMemory( & release, sizeof( INPUT ) ); // screen goes black if it does not exist
+    leftHandMoveHandling( leftHandData );
+    rightHandMoveHandling( rightHandData );
+}
 
-////    press.type = INPUT_MOUSE;
-////    press.mi.dwFlags = MOUSEEVENTF_LEFTDOWN;
+void KinectHandler::leftArrowPressed()
+{
+    INPUT input[ 2 ];
+    ZeroMemory( input, sizeof( input ) );
 
-////    release.type = INPUT_MOUSE;
-////    release.mi.dwFlags = MOUSEEVENTF_LEFTUP;
+    input[ 0 ].type = input[ 1 ].type = INPUT_KEYBOARD;
+    input[ 0 ].ki.wVk = input[1].ki.wVk = VK_LEFT; // press left key
+    input[ 0 ].ki.time = 0;
+    input[ 0 ].ki.wScan = 0;
+    input[ 0 ].ki.dwExtraInfo = 0;
+    input[ 0 ].ki.dwFlags = 0;
 
-//    press.type = INPUT_KEYBOARD;
-//    press.ki.dwFlags = WM_KEYDOWN;
-//    press.ki.wVk = VK_LEFT;
+    input[ 1 ].ki.dwFlags = KEYEVENTF_KEYUP;
 
-//    release.type = INPUT_KEYBOARD;
-//    release.ki.dwFlags = WM_KEYUP;
-//    release.ki.wVk = VK_LEFT;
+    SendInput( 2, input, sizeof( INPUT ) );
+}
 
-//    SendInput( 1, & press, sizeof( INPUT ) );
-//    SendInput( 1, & release, sizeof( INPUT ) );
+void KinectHandler::rightArrowPressed()
+{
+    INPUT input[ 2 ];
+    ZeroMemory( input, sizeof( input ) );
 
-    INPUT input[2];
-    ZeroMemory(input, sizeof(input));
+    input[ 0 ].type = input[ 1 ].type = INPUT_KEYBOARD;
+    input[ 0 ].ki.wVk = input[ 1 ].ki.wVk = VK_RIGHT; // press right key
+    input[ 0 ].ki.time = 0;
+    input[ 0 ].ki.wScan = 0;
+    input[ 0 ].ki.dwExtraInfo = 0;
+    input[ 0 ].ki.dwFlags = 0;
 
-    input[0].type = input[1].type = INPUT_KEYBOARD;
-    input[0].ki.wVk = input[1].ki.wVk = 0x41;
-    input[0].ki.time = 4;
+    input[ 1 ].ki.dwFlags = KEYEVENTF_KEYUP;
 
-    input[1].ki.dwFlags = KEYEVENTF_KEYUP;
+    SendInput( 2, input, sizeof( INPUT ) );
+}
 
-    SendInput(2, input, sizeof(INPUT));
+void KinectHandler::changeSlidingState()
+{
+    m_bIsSlidingOn = ! m_bIsSlidingOn;
+
+    qDebug() << "Sliding state: " << m_bIsSlidingOn;
 }

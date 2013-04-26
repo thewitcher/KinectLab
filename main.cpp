@@ -1,13 +1,12 @@
-#include "kinect-handler.h"
+#include <QApplication>
+#include "main-window.h"
 
-int main()
+int main( int argc, char * argv[] )
 {
-    KinectHandler kinectHandler;
+    QApplication a( argc, argv );
 
-    while( 1 )
-    {
-        kinectHandler.skeletonHandler();
-    }
+    MainWindow w;
+    w.show();
 
-    return 0;
+    return a.exec();
 }

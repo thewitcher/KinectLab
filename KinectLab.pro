@@ -4,24 +4,31 @@
 #
 #-------------------------------------------------
 
-QT       += core
+QT       += core gui
 
-QT       -= gui
+CONFIG   += thread
+
+greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
 TARGET = KinectLab
-CONFIG   += console
-CONFIG   -= app_bundle
 
 TEMPLATE = app
 
 
 SOURCES += main.cpp \
-    kinect-handler.cpp
+    kinect-handler.cpp \
+    main-window.cpp \
+    kinect-runner.cpp
 
 HEADERS += \
-    kinect-handler.h
+    kinect-handler.h \
+    main-window.h \
+    kinect-runner.h
 
 LIBS += -L"$$PWD/../../../../Program Files/Microsoft SDKs/Kinect/v1.7/lib/amd64/" -lKinect10
 LIBS += -luser32
 
 INCLUDEPATH += "$$PWD/../../../../Program Files/Microsoft SDKs/Kinect/v1.7/inc/"
+
+FORMS += \
+    main-window.ui
