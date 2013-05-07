@@ -18,12 +18,15 @@ TEMPLATE = app
 SOURCES += main.cpp \
     kinect-handler.cpp \
     main-window.cpp \
-    kinect-runner.cpp
+    kinect-runner.cpp \
+    system-input-handler.cpp
 
 HEADERS += \
     kinect-handler.h \
     main-window.h \
-    kinect-runner.h
+    kinect-runner.h \
+    kinect-details.h \
+    system-input-handler.h
 
 LIBS += -L"$$PWD/../../../../Program Files/Microsoft SDKs/Kinect/v1.7/lib/amd64/" -lKinect10
 LIBS += -luser32
@@ -32,3 +35,5 @@ INCLUDEPATH += "$$PWD/../../../../Program Files/Microsoft SDKs/Kinect/v1.7/inc/"
 
 FORMS += \
     main-window.ui
+
+RESOURCES +=
