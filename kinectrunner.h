@@ -39,8 +39,11 @@ class CKinectRunner : public QThread
 
 signals:
 	void newKinectDetailsSignal( CKinectDetails );
+	void kinectConnectionInfoSignal( int numberOfFailedTries );
 
 private:
+	int m_iWaitingTimerId;
+
 	void run();
 };
 

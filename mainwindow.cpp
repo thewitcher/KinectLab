@@ -37,7 +37,8 @@
 CMainWindow::CMainWindow( QWidget * parent ):
 	QMainWindow( parent ),
 	ui( new Ui::MainWindow ),
-	m_pKinnectRunner( new CKinectRunner )
+	m_pKinnectRunner( new CKinectRunner ),
+	m_iAttemptsLimit( 5 )
 {
 	ui->setupUi( this );
 
@@ -70,6 +71,7 @@ void CMainWindow::initialize()
 	connect(ui->m_pDefaultButton, SIGNAL(clicked()), this, SLOT(backToDeafaultValues()));
 	connect(ui->m_pStopButton, SIGNAL(clicked()), this, SLOT(stopKinectThread()));
 	connect(m_pKinnectRunner, SIGNAL(newKinectDetailsSignal(CKinectDetails)), this, SLOT(updateKinectStatus(CKinectDetails)));
+	connect(m_pKinnectRunner, SIGNAL(kinectConnectionInfoSignal(int)), this, SLOT(updateKinectStatus(int)));
 }
 
 ///////////////////////////////////////////////////////////////////////////
@@ -121,6 +123,28 @@ void CMainWindow::updateKinectStatus( const CKinectDetails & kinectDetails )
 	{
 		ui->m_pSlidingLabel->setText( "<h3><font color=red> Sliding status: disabled </color>" );
 	}
+}
+
+///////////////////////////////////////////////////////////////////////////
+/*!
+//\par		Description:
+//			This function is connected to signal from KinectRunner. It updates current kinect status on the screen.
+//
+//\par		Parameters:
+//\arg		[IN]		numberOfFailedTries	how many times kinect was not found. If this value is greater then attempts limit
+//						then kinect thread is terminated and main window is shown.
+*/
+void CMainWindow::updateKinectStatus( int a_iNumberOfFailedTries )
+{
+	if ( a_iNumberOfFailedTries > m_iAttemptsLimit )
+	{
+		ui->m_pConnectionStatusLabel->setText( "<h3><font color=red> Kinect connection status: disconnected </color>" );
+
+		stopKinectThread();
+	}
+
+	ui->m_pConnectionStatusLabel->setText( "<h3><font color=red> Kinect connection status: disconnected ( attempt: " +
+											QString::number( a_iNumberOfFailedTries ) + " ) </color>" );
 }
 
 ///////////////////////////////////////////////////////////////////////////

@@ -46,7 +46,6 @@ CKinectHandler::CKinectHandler():
 	m_iCurrentTrackedSkeleton( -1 )
 {
 	readSettings();
-	createFirstConnectedKinectSensor();
 }
 
 ///////////////////////////////////////////////////////////////////////////
@@ -59,6 +58,30 @@ CKinectHandler::~CKinectHandler()
 	m_pSensor->NuiShutdown();
 
 	qDebug() << "m_pSensor->NuiShutdown()";
+}
+
+///////////////////////////////////////////////////////////////////////////
+/*!
+//\par		Description:
+//			Starts creating object for handling kinect sensor.
+//
+//\par		Return value:
+//			It is a public version of createFirstConnectedKinectSensor with some changes.
+//			This method guard whether kinect sensor is already initialized and forbids
+//			from calling createFirstConnectedKinectSensor twice in case when sensor was
+//			found earlier.
+//
+//\retval	true	kinect is ready to work
+//\retval	false	kinect is not found
+*/
+bool CKinectHandler::startKinect()
+{
+	if ( m_pSensor != NULL )
+	{
+		return true;
+	}
+
+	return createFirstConnectedKinectSensor();
 }
 
 ///////////////////////////////////////////////////////////////////////////

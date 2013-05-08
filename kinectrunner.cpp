@@ -18,6 +18,7 @@
 //
 /////////////////////////////////////////////////////////////////////////////
 
+#include <QDebug> // USES: qDebug()
 #include "kinectrunner.h" // USES
 #include "kinecthandler.h" // USES: skeletonHandler(), getKinectDetails()
 
@@ -28,10 +29,23 @@
 //			to run reading from kinect sensor in infinite loop and emit signal
 //			when kinect status is changed. Thanks to this overload kinect can work
 //			in separated thread while GUI is always ready for user actions.
+//			If kinect can be found, kinnect handler object tries to find another one
+//			after 5 seconds. There can be maximum 5 attemps.
 */
 void CKinectRunner::run()
 {
 	CKinectHandler kinectHandler;
+
+	int attemptsCounter = 0;
+
+	while ( kinectHandler.startKinect() == false )
+	{
+		qDebug() << "Invalid attempts: " << ++attemptsCounter;
+		emit kinectConnectionInfoSignal( attemptsCounter );
+
+		sleep( 5 );
+
+	}
 
 	emit newKinectDetailsSignal( kinectHandler.getKinectDetails() );
 

@@ -51,6 +51,7 @@ public:
 private:
 	Ui::MainWindow * ui;
 	CKinectRunner * m_pKinnectRunner;
+	const int m_iAttemptsLimit;
 
 	enum EstackedWidgetPage //! Pages in stacked widget
 	{
@@ -76,6 +77,7 @@ private slots:
 	void showRunPage();
 	void settingsUpdate();
 	void updateKinectStatus( const CKinectDetails & kinectDetails );
+	void updateKinectStatus( int a_iNumberOfFailedTries );
 
 	void backToDeafaultValues();
 };

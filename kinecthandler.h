@@ -48,6 +48,7 @@ public:
 	// generally when this method returns true then something is happen with main skeleton
 	bool skeletonHandler();
 	CKinectDetails getKinectDetails() const;
+	bool startKinect();
 
 private:
 	// members
