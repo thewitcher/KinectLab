@@ -1,0 +1,26 @@
+/////////////////////////////////////////////////////////////////////////////
+//
+// This file may not be reproduced, disclosed or used in whole or in part
+// without the express written permission of PRUFTECHNIK Technology.
+// Copyright PRUFTECHNIK Technology, year.
+//
+/////////////////////////////////////////////////////////////////////////////
+//
+// File:		test.h
+// Author:		Marcin Haber
+// Email:		marcin.haber@pruftechnik.com.pl
+// Begin:		2013-04-07
+//
+// Description:
+/*!\class CTest
+//	Class description.
+//
+*/
+/////////////////////////////////////////////////////////////////////////////
+// Modification history:
+//
+//	2004-01-10	Marcin Haber	first change description.
+//	2005-03-15	Marcin Haber	second change description.
+//	2005-05-20	Marcin Haber	next change description.
+//
+/////////////////////////////////////////////////////////////////////////////
